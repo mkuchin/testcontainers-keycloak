@@ -22,18 +22,18 @@ import java.util.Set;
  */
 public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
 
-    private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak";
+    private static final String KEYCLOAK_IMAGE = "quay.io/keycloak/keycloak-x";
     private static final String KEYCLOAK_VERSION = "13.0.1";
 
     private static final int KEYCLOAK_PORT_HTTP = 8080;
     private static final int KEYCLOAK_PORT_HTTPS = 8443;
-    private static final Duration DEFAULT_STARTUP_TIMEOUT = Duration.ofMinutes(2);
+    private static final Duration DEFAULT_STARTUP_TIMEOUT = Duration.ofMinutes(1);
 
     private static final String KEYCLOAK_ADMIN_USER = "admin";
     private static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
-    private static final String KEYCLOAK_AUTH_PATH = "/auth";
+    private static final String KEYCLOAK_AUTH_PATH = "/";
 
-    private static final String DB_VENDOR = "h2";
+    private static final String DB_VENDOR = "h2-file";
 
     private static final String DEFAULT_EXTENSION_NAME = "extensions.jar";
 
@@ -56,6 +56,9 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     private static final Transferable WILDFLY_DEPLOYMENT_TRIGGER_FILE_CONTENT = Transferable.of("true".getBytes(StandardCharsets.UTF_8));
     private final Set<String> wildflyDeploymentTriggerFiles = new HashSet<>();
 
+    /**
+     * Create a KeycloakContainer with default image and version tag
+     */
     public KeycloakContainer() {
         this(KEYCLOAK_IMAGE + ":" + KEYCLOAK_VERSION);
     }
@@ -63,20 +66,19 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     /**
      * Create a KeycloakContainer by passing the full docker image name
      *
-     * @param dockerImageName Full docker image name, e.g. quay.io/keycloak/keycloak:8.0.1
+     * @param dockerImageName Full docker image name, e.g. quay.io/keycloak/keycloak-x:13.0.1
      */
     public KeycloakContainer(String dockerImageName) {
         super(dockerImageName);
         withExposedPorts(KEYCLOAK_PORT_HTTP, KEYCLOAK_PORT_HTTPS);
-//        withLogConsumer(new Slf4jLogConsumer(logger()));
     }
 
     @Override
     protected void configure() {
         withCommand(
-            "-c standalone.xml", // don't start infinispan cluster
-            "-b 0.0.0.0", // ensure proper binding
-            "-Dkeycloak.profile.feature.upload_scripts=enabled" // enable script uploads
+            "--auto-config",
+            "--profile=dev", // start the server w/o https in dev mode, local caching only
+            "--db=" + dbVendor
         );
 
         setWaitStrategy(Wait
@@ -85,10 +87,8 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
             .withStartupTimeout(startupTimeout)
         );
 
-        withEnv("KEYCLOAK_USER", adminUsername);
-        withEnv("KEYCLOAK_PASSWORD", adminPassword);
-
-        withEnv("DB_VENDOR", dbVendor);
+        withEnv("KEYCLOAK_ADMIN", adminUsername);
+        withEnv("KEYCLOAK_ADMIN_PASSWORD", adminPassword);
 
         if (useTls && isNotBlank(tlsCertFilename) && isNotBlank(tlsKeyFilename)) {
             String certFileInContainer = "/etc/x509/https/tls.crt";

@@ -1,6 +1,7 @@
 package dasniko.testcontainers.keycloak;
 
 import dasniko.testcontainers.keycloak.extensions.oidcmapper.TestOidcProtocolMapper;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.keycloak.TokenVerifier;
 import org.keycloak.admin.client.Keycloak;
@@ -22,6 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 
+@Disabled
 public class KeycloakContainerExtensionTest {
 
     @Test
