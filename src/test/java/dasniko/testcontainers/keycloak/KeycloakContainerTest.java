@@ -1,6 +1,5 @@
 package dasniko.testcontainers.keycloak;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
@@ -50,12 +49,11 @@ public class KeycloakContainerTest {
     }
 
     @Test
-    @Disabled
     public void shouldImportRealm() {
         try (KeycloakContainer keycloak = new KeycloakContainer().withRealmImportFile(TEST_REALM_JSON)) {
             keycloak.start();
 
-            String accountService = given().when().get(keycloak.getAuthServerUrl() + "/realms/test")
+            String accountService = given().when().get(keycloak.getAuthServerUrl() + "realms/test")
                 .then().statusCode(200).body("realm", equalTo("test"))
                 .extract().path("account-service");
 

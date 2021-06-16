@@ -7,6 +7,7 @@ import org.testcontainers.containers.SelinuxContext;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.MountableFile;
 
@@ -41,6 +42,7 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     private String adminUsername = KEYCLOAK_ADMIN_USER;
     private String adminPassword = KEYCLOAK_ADMIN_PASSWORD;
 
+    private final String dockerImageName;
     private String importFile;
     private String tlsKeystoreFilename;
     private String tlsKeystorePassword;
@@ -67,6 +69,7 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
      */
     public KeycloakContainer(String dockerImageName) {
         super(dockerImageName);
+        this.dockerImageName = dockerImageName;
         withExposedPorts(KEYCLOAK_PORT_HTTP, KEYCLOAK_PORT_HTTPS);
     }
 
@@ -93,8 +96,13 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
 
         if (importFile != null) {
             String importFileInContainer = "/tmp/" + importFile;
-            withCopyFileToContainer(MountableFile.forClasspathResource(importFile), importFileInContainer);
-            withEnv("KEYCLOAK_IMPORT", importFileInContainer);
+            setImage(new ImageFromDockerfile()
+                .withFileFromClasspath(importFile, importFile)
+                .withDockerfileFromBuilder(builder -> builder
+                    .from(dockerImageName)
+                    .copy(importFile, importFileInContainer)
+                    .run("/opt/jboss/keycloak/bin/kc.sh import --file=" + importFileInContainer + " --profile=dev || true")
+                    .build()));
         }
 
         if (extensionClassLocation != null) {
