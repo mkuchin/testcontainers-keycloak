@@ -33,8 +33,6 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     private static final String KEYCLOAK_ADMIN_PASSWORD = "admin";
     private static final String KEYCLOAK_AUTH_PATH = "/";
 
-    private static final String DB_VENDOR = "h2-file";
-
     private static final String DEFAULT_EXTENSION_NAME = "extensions.jar";
 
     // for Keycloak-X this will be /opt/jboss/keycloak/providers
@@ -43,7 +41,6 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     private String adminUsername = KEYCLOAK_ADMIN_USER;
     private String adminPassword = KEYCLOAK_ADMIN_PASSWORD;
 
-    private String dbVendor = DB_VENDOR;
     private String importFile;
     private String tlsCertFilename;
     private String tlsKeyFilename;
@@ -76,9 +73,7 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
     @Override
     protected void configure() {
         withCommand(
-            "--auto-config",
-            "--profile=dev", // start the server w/o https in dev mode, local caching only
-            "--db=" + dbVendor
+            "start-dev" // start the server w/o https in dev mode, local caching only
         );
 
         setWaitStrategy(Wait
@@ -213,11 +208,6 @@ public class KeycloakContainer extends GenericContainer<KeycloakContainer> {
 
     public KeycloakContainer withAdminPassword(String adminPassword) {
         this.adminPassword = adminPassword;
-        return self();
-    }
-
-    public KeycloakContainer withDbVendor(String dbVendor) {
-        this.dbVendor = dbVendor;
         return self();
     }
 
